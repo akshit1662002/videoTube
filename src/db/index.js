@@ -9,7 +9,11 @@ const connectDB = async () => {
       `${MONGODB_URL}/${DB_NAME}`
     );
     // Log only connectionInstance
-    // console.log(connectionInstance);
+    console.log(connectionInstance);
+    //important things
+    console.log("DB HOST:", connectionInstance.connection.host);
+    console.log("DB NAME:", connectionInstance.connection.name);
+    console.log("READY STATE:", connectionInstance.connection.readyState);
 
     // Or log a specific part:
     console.log(
