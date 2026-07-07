@@ -115,10 +115,15 @@ const loginUser = asyncHandler(async (req, res) => {
   //access and refresh token generate , and send to user
   //send cookies
 
-  const { userName, email, password } = req.body;
+  const { userName, email, password } = req.body || {};
+  console.log("username", userName);
 
-  if (!userName || !email) {
-    throw new ApiError(400, "Email and username is required");
+  if (!(userName || email)) {
+    throw new ApiError(400, "Username or email is required");
+  }
+
+  if (!password) {
+    throw new ApiError(400, "Password is required");
   }
 
   const user = await User.findOne({
@@ -129,7 +134,7 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User does not exists");
   }
 
-  const isPasswordValid = user.isPasswordCorrect(password);
+  const isPasswordValid = await user.isPasswordCorrect(password);
 
   if (!isPasswordValid) {
     throw new ApiError(401, "Incorrect user credentials");
@@ -168,6 +173,27 @@ const loginUser = asyncHandler(async (req, res) => {
 const logoutUser = asyncHandler(async (req, res) => {
   //clear cookie
   //clear refresh token
+  //make middleware
+  await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: { refreshToken: undefined },
+    },
+    { new: true }
+  );
+
+  const option = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res
+    .status(200)
+    .clearCookie("accessToken", option)
+    .clearCookie("refreshToken", option)
+    .json(new ApiResponse(200, {}, "user logout successfully"));
 });
+
+// const refreshAccesstoken = asyncHandler(async (req, res) => {});
 
 export { registerUser, loginUser, logoutUser };
